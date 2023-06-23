@@ -15,4 +15,4 @@ u can change file_name variable to whatever sound u like
 
 ## Screenshots
 -   if u are too lazy to run the app like me :o   
-![_1](Screenshot from 2023-06-23 22-58-58.png)
+![_1](1_.png)
