@@ -1,5 +1,5 @@
 # Audvisa
-Audio visualisation app with python
+Audio visualization app with python
 
 ## Dev
 -   this app is still under dev.   
