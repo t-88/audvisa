@@ -1,5 +1,4 @@
 import numpy as np
-import wave
 import pyaudio
 
 
@@ -14,8 +13,6 @@ stream = p.open(format=FORMAT,
                 rate=freq,
                 input=True,
                 frames_per_buffer=CHUNK)
-
-
 
 
 
@@ -37,7 +34,6 @@ def plot(ctx,x,y,yoff=400,xdis=1):
 h = 800
 w = 600
 
-CHUNK = 1024 * 4
 pygame.init()
 
 
