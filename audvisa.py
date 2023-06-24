@@ -1,7 +1,7 @@
 import numpy as np
 import wave
 
-file_name = "sounds/Tetris.wav"
+file_name = "sounds/are-you-sure-about-that.wav"
 
 file = wave.open(file_name,"rb")
 freq =  file.getframerate()
@@ -16,65 +16,98 @@ file.close()
 
 import pygame
 
-
-def plot(ctx,x,y):
+def plot(ctx,x,y,yoff=400,xdis=1):
     assert len(x) == len(y)
 
-    for i in range(0,len(x),2):
+    for i in range(0,len(x),1):
+        if(i >= len(x) or (i + 1 >= len(x))):
+            break
         pygame.draw.line(
                         ctx,
                         (255,255,0),
-                        (x[i],y[i]         + h // 2),
-                        (x[i + 1],y[i + 1] + h // 2),
+                        (x[i] * xdis,    -y[i]         + yoff // 2),
+                        (x[i + 1] * xdis,-y[i + 1] + yoff // 2),
                         )
+        # pygame.draw.circle(
+        #                 ctx,
+        #                 (255,255,0),
+        #                 (x[i] * xdis,    -y[i]         + yoff // 2),
+        #                 2,
+        #                 )
+        
 
 
-h = 400
+h = 800
 w = 600
-pygame.mixer.init()
+
+CHUNK = 1024 * 4
+pygame.mixer.init(frequency=freq,buffer=CHUNK)
 pygame.init()
 
-pygame.mixer.music.load(file_name)
-pygame.mixer.music.play()
 
 
-display = pygame.display.set_mode((w,h))
-clock  = pygame.time.Clock()
-x = np.linspace(0,w,freq)
-
-timer = 0
-curr_sec = 0
-freqs = 0
-y = np.interp(data_buffer[freq*(curr_sec):freq*(curr_sec+1)],[-2**16,2**16],[-100,100])
 
 
-done = False
-while not done:
-    dt = clock.tick(60) / 1000
-    timer += dt
-    freqs = min(freqs + freq * dt,freq) 
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            done = True
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
+
+
+def game_loop():
+    pygame.mixer.music.load(file_name)
+    pygame.mixer.music.play()
+
+    display = pygame.display.set_mode((w,h))
+    clock  = pygame.time.Clock()
+
+    done = False
+    timer = 0
+    curr_sec = 0
+    freqs = 0
+
+    data = data_buffer[freq*(curr_sec):freq*(curr_sec+1)]
+    x = np.linspace(0,w,freq)
+    y = np.interp(data,[-2**16,2**16],[-100,100])
+
+    while not done:
+        dt = clock.tick(60) / 1000
+        timer += dt
+        freqs = min(freqs + freq * dt,freq) 
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
                 done = True
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    done = True
 
-    display.fill((0,0,0))
-    pygame.draw.line(display,(255,255,255),(0,h//2),(w,h//2))
+        display.fill((0,0,0))
+        pygame.draw.line(display,(255,255,255),(0,400//2),(w,400//2))
 
-    if timer >= 1:
-        print(freqs,freq)
-        timer = 0
-        freqs = 0
-        curr_sec += 1
-        y = np.interp(data_buffer[freq*(curr_sec):freq*(curr_sec+1)],[-2**16,2**16],[-100,100])
+        if timer >= 1:
+            timer = 0
+            freqs = 0
+            curr_sec += 1
+            data = data_buffer[freq*(curr_sec):freq*(curr_sec+1)]
+            y = np.interp(data,[-2**16,2**16],[-100,100])
 
-    plot(display,x,y)
+        plot(display,x,y)
+        carrot_x = int(np.interp(freqs,[0,freq],[0,w]))
+        pygame.draw.line(display,(255,0,0),(carrot_x,0),(carrot_x,400))
 
 
-    carrot_x = np.interp(freqs,[0,freq],[0,w])
-    pygame.draw.line(display,(255,0,0),(carrot_x,0),(carrot_x,h))
 
-    pygame.display.flip()
+        #data_fft = np.abs(np.fft.fft(data[carrot_x])[:len(data[carrot_x])//2]) / freq
+        data_fft = np.abs(np.fft.fft(data[int(freqs):int(freqs) + CHUNK]))[:CHUNK//2] / freq
+
+        x_fft =  np.linspace(0,w,len(data_fft))
+        y_fft = data_fft #np.interp(data_fft,[0,100],[0,100])
+        plot(display,x_fft,y_fft,yoff=1200,xdis=2)
+
+
+
+        pygame.display.flip()
+
+
+
+
+
+game_loop()
